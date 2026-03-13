@@ -1,0 +1,148 @@
+rclone.exe yi windows/system32/ altına kopyala.
+
+Önce web doğrulama yapıyorum (Kural 4.3):Yeterli bilgi topladım. Şimdi kodu yazıyorum:---
+
+**Kurulum (1 kez):**
+
+1. `rclone.exe` → [rclone.org/downloads](https://rclone.org/downloads) → Windows 64-bit indir, ZIP'i aç, `rclone.exe`'yi `C:\Windows\System32\`'ye koy
+2. CMD'de: `rclone config` → bulut bağlantılarını ekle (Google Drive, OneDrive vb.)
+3. Bu `.py` dosyasını VSCode'da aç → `python rclone_manager.py`
+
+---
+
+**Nasıl çalışır:**
+
+**Kaldığı yerden devam:** Her dosya başlamadan önce `rclone_state.json` dosyasına "kalan dosyalar" listesi yazılır. Program kapanır, internet kesilir, ne olursa olsun. Yeniden açınca bu dosyayı görür, "devam et?" diye sorar.
+
+**İnternet kesilince:** Her dosya için 5 kez yeniden deneme yapar. Aralarında 2, 4, 8, 16, 32 saniye bekler (üstel geri çekilme). 5 denemede de başarısız olursa o dosyayı hatalı sayar, diğerine geçer.
+
+**Çift panel:** Sol ve sağ listede çift tıklayarak klasöre girersin. `..` klasörü üst dizine çıkar. Kopyala/Sync butonları seçilen paneller arasında çalışır.
+
+**Farklılıklar (orijinalden):** Colab'a ait `ipywidgets`, `IPython.display` tamamen çıktı. Tkinter ile native Windows penceresi. `rclone.exe` otomatik kurulmaz, bir kez elle kurman gerekiyor.
+
+
+Hepsini sırayla yapacağız. `n` yazıp Enter'a bas, her bağlantı için isim girmen gerekecek.
+
+---
+
+## 📁 GENEL ADIMLAR (her bağlantı için aynı başlangıç)
+
+```
+n/s/q> n
+name> [aşağıda her biri için söylüyorum]
+```
+
+Sonra bir liste gelir, numarasını yazarsın.
+
+---
+
+## 1️⃣ Google Drive
+
+```
+name> gdrive
+Storage> drive          ← "drive" yaz veya numarasını bul
+client_id>              ← boş bırak (Enter)
+client_secret>          ← boş bırak (Enter)
+scope> 1                ← tam erişim
+root_folder_id>         ← boş bırak
+service_account_file>   ← boş bırak
+Edit advanced config? n
+Use auto config? y      ← tarayıcı açılır, Google hesabıyla giriş yap
+Configure as shared drive? n
+```
+
+---
+
+## 2️⃣ OneDrive
+
+```
+name> onedrive
+Storage> onedrive       ← "onedrive" yaz veya numarasını bul
+client_id>              ← boş bırak
+client_secret>          ← boş bırak
+Edit advanced config? n
+Use auto config? y      ← tarayıcı açılır, Microsoft hesabıyla giriş yap
+Your choice> 1          ← OneDrive Personal
+Drives found - seç> 0
+```
+
+---
+
+## 3️⃣ Koofr
+
+```
+name> koofr
+Storage> koofr          ← "koofr" yaz veya numarasını bul
+provider> Koofr         ← 1 numarayı seç
+user> senin@email.com   ← Koofr hesap emailin
+password> y
+[şifreni gir]           ← Koofr → Settings → Password → App passwords → "rclone" için yeni şifre oluştur
+```
+
+> ⚠️ Koofr için normal şifren değil, **App Password** gerekiyor! Koofr sitesinde → **Preferences → Password → App passwords** → yeni şifre oluştur, onu gir.
+
+---
+
+## 4️⃣ Internxt
+
+```
+name> internxt
+Storage> webdav         ← Internxt WebDAV kullanır
+url> https://webdav.internxt.com
+vendor> other
+user> senin@email.com
+password> y
+[şifreni gir]           ← Internxt normal şifreni gir
+```
+
+---
+
+## ✅ Her bağlantı sonunda
+
+```
+Keep this remote? y
+```
+
+Hepsini ekledikten sonra:
+```
+q
+```
+
+---
+
+## 🔍 Test et
+
+CMD'de:
+```
+rclone lsd gdrive:
+rclone lsd onedrive:
+rclone lsd koofr:
+rclone lsd internxt:
+```
+
+Klasör listesi geliyorsa bağlantı çalışıyor demektir. Sonra programı çalıştır.
+
+
+
+**2'yi seç** → `OneDrive (personal)`
+
+```
+config_driveid> 2
+```
+
+
+**Kopyala (Copy):** Kaynaktaki dosyaları hedefe ekler. Hedefte fazladan dosya varsa **dokunmaz**, olduğu gibi bırakır.
+
+**Sync:** Kaynağı hedefe birebir yansıtır. Hedefte olmayan dosyalar **silinir**. Kaynak ne ise hedef ona dönüşür.
+
+---
+
+| | Kopyala | Sync |
+|---|---|---|
+| Yeni dosya ekler | ✅ | ✅ |
+| Hedefte fazla dosyayı siler | ❌ | ✅ |
+| Güvenli | ✅ | ⚠️ dikkat |
+
+---
+
+**Öneri:** İlk denemede **Kopyala** kullan. Sync'i yanlış yönde çalıştırırsan hedef klasördeki dosyalar silinebilir.
